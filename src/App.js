@@ -118,6 +118,24 @@ function App() {
           />
         </Routes>
       </main>
+
+      <footer className="footer">
+        <div className="container">
+          <div className="footer-content">
+            <p>
+              Designed by{' '}
+              <a 
+                href="https://uimitra.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="footer-link"
+              >
+                Uimitra
+              </a>
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

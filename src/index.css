@@ -557,6 +557,15 @@ tr:hover {
   .chart-container {
     padding: var(--space-6);
   }
+
+  .footer {
+    padding: 20px 0;
+    margin-top: 40px;
+  }
+
+  .footer-content p {
+    font-size: 13px;
+  }
 }
 
 /* Animations */
@@ -895,6 +904,40 @@ tr:hover {
   margin-top: 4px;
   font-size: 12px;
   color: var(--neutral-500);
+}
+
+/* Footer styling */
+.footer {
+  background: var(--neutral-900);
+  color: var(--neutral-100);
+  padding: 24px 0;
+  margin-top: 60px;
+  border-top: 1px solid var(--neutral-800);
+}
+
+.footer-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.footer-content p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--neutral-300);
+}
+
+.footer-link {
+  color: var(--primary-400);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.footer-link:hover {
+  color: var(--primary-300);
+  text-decoration: underline;
 }
 
 /* Enhanced button styling */
