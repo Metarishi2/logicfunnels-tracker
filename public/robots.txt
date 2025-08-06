@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://c-web-daily-activity-tracker.vercel.app/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1
+
+# Disallow admin and test pages from search engines
+Disallow: /admin
+Disallow: /login
+Disallow: /test
+Disallow: /realtime
+
+# Allow public pages
+Allow: /submit
+Allow: / 

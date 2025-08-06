@@ -940,6 +940,91 @@ tr:hover {
   text-decoration: underline;
 }
 
+/* Social Share Component */
+.social-share {
+  background: var(--neutral-50);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.share-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.share-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: white;
+}
+
+.share-btn.whatsapp {
+  background: #25D366;
+}
+
+.share-btn.whatsapp:hover {
+  background: #128C7E;
+  transform: translateY(-2px);
+}
+
+.share-btn.twitter {
+  background: #1DA1F2;
+}
+
+.share-btn.twitter:hover {
+  background: #0d8bd9;
+  transform: translateY(-2px);
+}
+
+.share-btn.facebook {
+  background: #4267B2;
+}
+
+.share-btn.facebook:hover {
+  background: #365899;
+  transform: translateY(-2px);
+}
+
+.share-btn.linkedin {
+  background: #0077B5;
+}
+
+.share-btn.linkedin:hover {
+  background: #005885;
+  transform: translateY(-2px);
+}
+
+.share-btn.native {
+  background: var(--primary-600);
+}
+
+.share-btn.native:hover {
+  background: var(--primary-700);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .share-buttons {
+    flex-direction: column;
+  }
+  
+  .share-btn {
+    justify-content: center;
+  }
+}
+
 /* Enhanced button styling */
 .btn {
   display: inline-flex;

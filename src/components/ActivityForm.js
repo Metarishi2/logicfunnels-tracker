@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Send, CheckCircle, AlertCircle, Activity, MessageSquare, Calendar, Phone, Reply, UserPlus } from 'lucide-react';
 import { supabase } from '../supabase';
+import SocialShare from './SocialShare';
 
 function ActivityForm() {
   const [formData, setFormData] = useState({
@@ -278,6 +279,12 @@ function ActivityForm() {
           <li><strong>Replies Received:</strong> Responses from prospects</li>
         </ul>
       </div>
+
+      <SocialShare 
+        title="Daily Activity Tracker - Submit Your Activities"
+        description="Track your daily outreach activities with our easy-to-use form. Monitor DMs, comments, replies, follow-ups, and calls."
+        url={window.location.href}
+      />
     </div>
   );
 }

@@ -14,6 +14,7 @@ import AdminDashboard from './components/AdminDashboard';
 import RealTimeDashboard from './components/RealTimeDashboard';
 import AdminLogin from './components/AdminLogin';
 import TestConnection from './components/TestConnection';
+import SEO from './components/SEO';
 import { useAuth } from './hooks/useAuth';
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
 
   return (
     <div className="App">
+      <SEO />
       <header className="header">
         <div className="container">
           <div className="header-content">
