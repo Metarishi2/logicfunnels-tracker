@@ -182,7 +182,7 @@ function App() {
         <div className="container">
           <div className="footer-content">
             <p>
-              © 2025 Copyright Webxela and Designed by{' '}
+              © 2025 Copyright 
               <a 
                 href="https://webxela.com" 
                 target="_blank" 
@@ -191,7 +191,7 @@ function App() {
               >
                 Webxela
               </a>
-              {' '}|{' '}
+              {' '}and Designed by{' '}
               <a 
                 href="https://webxela.com" 
                 target="_blank" 
