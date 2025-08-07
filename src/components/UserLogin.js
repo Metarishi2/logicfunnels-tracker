@@ -54,7 +54,6 @@ function UserLogin() {
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="email">
-            <Mail size={16} className="inline mr-2" />
             Email
           </label>
           <input
@@ -70,7 +69,6 @@ function UserLogin() {
 
         <div className="form-group">
           <label htmlFor="password">
-            <Lock size={16} className="inline mr-2" />
             Password
           </label>
           <input
@@ -83,6 +81,8 @@ function UserLogin() {
             required
           />
         </div>
+
+        <br />
 
         {error && (
           <div className="error">
@@ -121,7 +121,7 @@ function UserLogin() {
         </div>
       </form>
 
-      <div 
+      {/* <div 
         style={{ 
           marginTop: '20px', 
           padding: '15px', 
@@ -181,7 +181,7 @@ function UserLogin() {
           <li>Access assigned client dashboards</li>
           <li>Track performance over time</li>
         </ul>
-      </div>
+      </div> */}
     </div>
   );
 }

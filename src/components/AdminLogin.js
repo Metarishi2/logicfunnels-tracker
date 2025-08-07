@@ -57,7 +57,6 @@ function AdminLogin() {
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="email">
-            <Mail size={16} className="inline mr-2" />
             Email
           </label>
           <input
@@ -73,7 +72,6 @@ function AdminLogin() {
 
         <div className="form-group">
           <label htmlFor="password">
-            <Lock size={16} className="inline mr-2" />
             Password
           </label>
           <input
@@ -86,6 +84,7 @@ function AdminLogin() {
             required
           />
         </div>
+        <br />
 
         {error && (
           <div className="error">
@@ -113,6 +112,8 @@ function AdminLogin() {
               </>
             )}
           </button>
+
+          
           
           <button 
             type="button" 
@@ -125,7 +126,7 @@ function AdminLogin() {
         </div>
       </form>
 
-      <div 
+      {/* <div 
         style={{ 
           marginTop: '20px', 
           padding: '15px', 
@@ -153,7 +154,7 @@ function AdminLogin() {
           <p><strong>Email:</strong> admin@example.com</p>
           <p><strong>Password:</strong> admin123</p>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
