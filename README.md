@@ -16,15 +16,14 @@ A comprehensive React-based daily activity tracking system with real-time analyt
 - Weekly, monthly, and total breakdowns
 - Trend analysis and performance metrics
 
-### 🔐 **Admin Management**
-- Secure admin authentication
-- Add new admin users from dashboard
-- Role-based access control
-- Admin-only analytics dashboard
+### 🔐 **Multi-tenant System**
+- Admin and User roles with role-based access control
+- Admin can create and manage users and clients
+- Users can only see their own analytics
+- Client assignment and management
 
 ### 📤 **Data Export**
 - CSV export functionality
-- Excel file generation
 - Looker Studio integration
 - Real-time data synchronization
 
@@ -41,7 +40,6 @@ A comprehensive React-based daily activity tracking system with real-time analyt
 - **Charts**: Recharts
 - **Icons**: Lucide React
 - **Date Handling**: date-fns
-- **Excel Export**: XLSX
 - **Styling**: CSS3 with custom design system
 
 ## 📦 Installation
@@ -79,9 +77,9 @@ A comprehensive React-based daily activity tracking system with real-time analyt
    ```
 
 4. **Database Setup**
-   - Run the SQL scripts in `supabase_setup.sql` in your Supabase SQL Editor
-   - Set up Row Level Security (RLS) policies
-   - Configure authentication settings
+   - Run the SQL script in `simple_admin_setup.sql` in your Supabase SQL Editor
+   - This will create all necessary tables and the admin user
+   - Admin credentials: `admin@example.com` / `admin123`
 
 5. **Start Development Server**
    ```bash
@@ -90,150 +88,151 @@ A comprehensive React-based daily activity tracking system with real-time analyt
 
 ## 🗄️ Database Schema
 
+### `users` Table
+```sql
+- id (uuid, primary key)
+- email (varchar, unique)
+- password_hash (varchar)
+- first_name (varchar)
+- last_name (varchar)
+- role (varchar, default 'user')
+- is_active (boolean, default true)
+- created_at (timestamp)
+- updated_at (timestamp)
+```
+
+### `clients` Table
+```sql
+- id (uuid, primary key)
+- name (varchar)
+- description (text)
+- created_at (timestamp)
+- updated_at (timestamp)
+```
+
 ### `daily_activities` Table
 ```sql
 - id (uuid, primary key)
+- user_id (uuid, foreign key)
+- client_id (uuid, foreign key)
 - dms_sent (integer)
+- connection_requests_sent (integer)
 - comments_made (integer)
 - replies_received (integer)
 - followups_made (integer)
-- calls_booked (integer, nullable)
-- connection_requests_sent (integer)
+- calls_booked (integer)
 - submitted_at (timestamp)
+- created_at (timestamp)
+- updated_at (timestamp)
 ```
 
-### Computed Columns
-- `weekday` - Day of week
-- `week_number` - Week number of year
-- `total_activities` - Sum of all activities
+### `user_client_assignments` Table
+```sql
+- id (uuid, primary key)
+- user_id (uuid, foreign key)
+- client_id (uuid, foreign key)
+- created_at (timestamp)
+```
 
-## 📱 Usage
+## 🔐 Authentication
 
-### Public Routes
-- **`/submit`** - Daily activity submission form
-- **`/test`** - Database connection testing
-
-### Admin Routes
-- **`/admin`** - Main analytics dashboard
-- **`/realtime`** - Real-time analytics
-- **`/login`** - Admin authentication
-
-### Default Admin Credentials
+### Admin Access
 - **Email**: `admin@example.com`
 - **Password**: `admin123`
+- **Capabilities**: Create users, manage clients, view all analytics
 
-## 🔧 Configuration
-
-### Environment Variables
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `REACT_APP_SUPABASE_URL` | Supabase project URL | Yes |
-| `REACT_APP_SUPABASE_ANON_KEY` | Supabase anonymous key | Yes |
-| `REACT_APP_SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key | Yes |
-| `PORT` | Development server port | No (default: 3001) |
-| `REACT_APP_ENV` | Environment mode | No |
-
-### Supabase Setup
-1. Create a new Supabase project
-2. Run the SQL setup scripts
-3. Configure authentication providers
-4. Set up RLS policies
-5. Add environment variables
+### User Access
+- Users can be created by admin from the admin dashboard
+- Users can only see their own analytics and assigned clients
+- Users can submit daily activities
 
 ## 📊 Analytics Features
 
-### Dashboard Metrics
-- **Cumulative Totals**: All-time activity summaries
-- **Trend Analysis**: Weekly and daily comparisons
-- **Rate Calculations**: 
-  - Call booking rate (Calls ÷ DMs)
-  - Response rate (Replies ÷ DMs)
-  - Follow-up efficiency (Calls ÷ Follow-ups)
-- **Performance Insights**: Top performing days/weeks
+### Admin Dashboard
+- View all users and their analytics
+- Create and manage clients
+- Assign users to clients
+- View overall system analytics
+- User management (edit, delete)
 
-### Real-time Features
-- Live data updates
-- Auto-refresh functionality
-- Real-time status indicators
-- Live trend charts
+### User Dashboard
+- Personal analytics overview
+- My activities tracking
+- Assigned clients view
+- Activity submission form
 
-## 🚀 Deployment
+### Live Analytics
+- Real-time data updates
+- Interactive charts
+- Performance metrics
+- Looker Studio integration
 
-### Vercel Deployment
-1. Connect your GitHub repository to Vercel
-2. Add environment variables in Vercel dashboard
-3. Deploy automatically on push
+## 🚀 Quick Start
 
-### Netlify Deployment
-1. Connect repository to Netlify
-2. Set build command: `npm run build`
-3. Set publish directory: `build`
-4. Add environment variables
+1. **Setup Supabase**
+   - Create a new Supabase project
+   - Copy your project URL and API keys
+   - Update the `.env` file
 
-### Manual Deployment
-```bash
-npm run build
-# Upload build/ folder to your hosting provider
+2. **Run Database Setup**
+   - Execute `simple_admin_setup.sql` in Supabase SQL Editor
+   - This creates all tables and admin user
+
+3. **Start the Application**
+   ```bash
+   npm start
+   ```
+
+4. **Login as Admin**
+   - Go to `/login`
+   - Use: `admin@example.com` / `admin123`
+   - Create users and clients from admin dashboard
+
+## 📁 Project Structure
+
+```
+src/
+├── components/
+│   ├── ActivityForm.js          # Activity submission form
+│   ├── AdminDashboard.js        # Admin management dashboard
+│   ├── UserDashboard.js         # User analytics dashboard
+│   ├── UserLiveAnalytics.js     # User real-time analytics
+│   ├── RealTimeDashboard.js     # Admin real-time analytics
+│   ├── AdminLogin.js           # Admin login form
+│   ├── UserLogin.js            # User login form
+│   ├── AdminSetup.js           # Admin setup component
+│   └── TestConnection.js       # Database connection test
+├── hooks/
+│   └── useAuth.js              # Authentication logic
+├── App.js                      # Main application component
+└── index.css                   # Global styles
 ```
 
-## 🔒 Security
+## 🔧 Development
 
-### Authentication
-- Supabase Auth integration
-- Role-based access control
-- Secure admin management
+### Available Scripts
+- `npm start` - Start development server
+- `npm build` - Build for production
+- `npm test` - Run tests
+- `npm eject` - Eject from Create React App
 
-### Data Protection
-- Row Level Security (RLS)
-- Environment variable protection
-- Input validation and sanitization
+### Environment Variables
+- `REACT_APP_SUPABASE_URL` - Supabase project URL
+- `REACT_APP_SUPABASE_ANON_KEY` - Supabase anonymous key
+- `REACT_APP_SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key
+- `PORT` - Development server port (default: 3000)
 
-## 📈 Monitoring
+## 📝 License
 
-### Analytics
-- Real-time activity tracking
-- Performance metrics
-- User engagement analytics
-
-### Error Handling
-- Comprehensive error logging
-- User-friendly error messages
-- Graceful degradation
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+4. Submit a pull request
 
-## 📄 License
+## 📞 Support
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-For support and questions:
-- Create an issue in this repository
-- Check the [ADMIN_SETUP.md](ADMIN_SETUP.md) for detailed setup instructions
-- Review the troubleshooting section in the setup guide
-
-## 🔄 Updates
-
-### Recent Changes
-- ✅ Removed duplicate sections from dashboard components
-- ✅ Created shared components for better maintainability
-- ✅ Added comprehensive .gitignore file
-- ✅ Improved code organization and structure
-
-### Roadmap
-- [ ] Enhanced mobile responsiveness
-- [ ] Additional chart types
-- [ ] Advanced filtering options
-- [ ] API rate limiting
-- [ ] Performance optimizations
-
----
-
-**Built with ❤️ using React and Supabase** 
+For support and questions, please open an issue on GitHub. 

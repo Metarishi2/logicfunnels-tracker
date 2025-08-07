@@ -2,11 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   BarChart3, 
   TrendingUp, 
-  Activity,
-  MessageSquare,
-  Reply,
-  Phone,
-  Users,
   RefreshCw,
   Zap,
   ExternalLink
@@ -14,7 +9,9 @@ import {
 import RealTimeStatus from './shared/RealTimeStatus';
 import LookerStudioIntegration from './shared/LookerStudioIntegration';
 import StatsGrid from './shared/StatsGrid';
+import AdminAccessMessage from './AdminAccessMessage';
 import { supabase } from '../supabase';
+import { useAuth } from '../hooks/useAuth';
 import { format } from 'date-fns';
 import {
   XAxis,
@@ -28,6 +25,7 @@ import {
 } from 'recharts';
 
 function RealTimeDashboard() {
+  const { isAdmin } = useAuth();
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -105,24 +103,29 @@ function RealTimeDashboard() {
 
     const interval = setInterval(() => {
       fetchActivities();
-    }, 30000); // 30 seconds
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [realTimeEnabled, fetchActivities]);
+
+  // Admin-only access check (after all hooks)
+  if (!isAdmin()) {
+    return <AdminAccessMessage />;
+  }
 
   // Calculate totals
   const totals = activities.reduce((acc, activity) => {
     acc.dms_sent += activity.dms_sent || 0;
     acc.comments_made += activity.comments_made || 0;
     acc.replies_received += activity.replies_received || 0;
-    acc.followups_scheduled += activity.followups_scheduled || 0;
+    acc.followups_made += activity.followups_made || 0;
     acc.calls_booked += activity.calls_booked || 0;
     return acc;
   }, {
     dms_sent: 0,
     comments_made: 0,
     replies_received: 0,
-    followups_scheduled: 0,
+    followups_made: 0,
     calls_booked: 0
   });
 
@@ -137,11 +140,11 @@ function RealTimeDashboard() {
     .map(activity => ({
       date: format(new Date(activity.submitted_at), 'MMM dd'),
       total: (activity.dms_sent || 0) + (activity.comments_made || 0) + 
-             (activity.replies_received || 0) + (activity.followups_scheduled || 0),
+             (activity.replies_received || 0) + (activity.followups_made || 0),
       dms_sent: activity.dms_sent || 0,
       comments_made: activity.comments_made || 0,
       replies_received: activity.replies_received || 0,
-      followups_scheduled: activity.followups_scheduled || 0,
+      followups_made: activity.followups_made || 0,
       calls_booked: activity.calls_booked || 0
     }))
     .sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -156,16 +159,16 @@ function RealTimeDashboard() {
       dms_sent: activity.dms_sent,
       comments_made: activity.comments_made,
       replies_received: activity.replies_received,
-      followups_scheduled: activity.followups_scheduled,
+      followups_made: activity.followups_made,
       calls_booked: activity.calls_booked || 0,
       total_activities: (activity.dms_sent || 0) + (activity.comments_made || 0) + 
-                       (activity.replies_received || 0) + (activity.followups_scheduled || 0)
+                       (activity.replies_received || 0) + (activity.followups_made || 0)
     }));
 
     const csvContent = [
-      'date,day_of_week,month,year,dms_sent,comments_made,replies_received,followups_scheduled,calls_booked,total_activities',
+      'date,day_of_week,month,year,dms_sent,comments_made,replies_received,followups_made,calls_booked,total_activities',
       ...csvData.map(row => 
-        `${row.date},${row.day_of_week},${row.month},${row.year},${row.dms_sent},${row.comments_made},${row.replies_received},${row.followups_scheduled},${row.calls_booked},${row.total_activities}`
+        `${row.date},${row.day_of_week},${row.month},${row.year},${row.dms_sent},${row.comments_made},${row.replies_received},${row.followups_made},${row.calls_booked},${row.total_activities}`
       )
     ].join('\n');
 

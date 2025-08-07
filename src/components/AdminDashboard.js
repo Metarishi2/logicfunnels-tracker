@@ -1,913 +1,855 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   BarChart3, 
-  TrendingUp, 
-  Calendar, 
-  Download, 
-  Filter,
-  RefreshCw,
-  Activity,
-  MessageSquare,
-  Reply,
-  Phone,
   Users,
-  FileSpreadsheet,
+  Building, 
+  Edit, 
+  Trash2, 
   UserPlus,
-  Shield,
-  Mail,
-  Lock,
-  AlertCircle,
-  CheckCircle,
-  Zap,
-  ExternalLink
+  Building2,
+  Activity,
+  Target
 } from 'lucide-react';
-import RealTimeStatus from './shared/RealTimeStatus';
-import LookerStudioIntegration from './shared/LookerStudioIntegration';
-import StatsGrid from './shared/StatsGrid';
-import { supabase, supabaseAdmin } from '../supabase';
-import { format, getWeek, getDay } from 'date-fns';
-import * as XLSX from 'xlsx';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  AreaChart,
-  Area,
-  LineChart,
-  Line
-} from 'recharts';
+import { supabase } from '../supabase';
+import { useAuth } from '../hooks/useAuth';
 
 function AdminDashboard() {
+  const { isAdmin } = useAuth();
+  const [users, setUsers] = useState([]);
+  const [clients, setClients] = useState([]);
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [filters, setFilters] = useState({
-    dateFrom: '',
-    dateTo: '',
-    week: ''
+  const [activeTab, setActiveTab] = useState('overview');
+  const [showCreateUser, setShowCreateUser] = useState(false);
+  const [showCreateClient, setShowCreateClient] = useState(false);
+  const [showEditUser, setShowEditUser] = useState(false);
+  const [showDeleteUser, setShowDeleteUser] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [analytics, setAnalytics] = useState({
+    totalActivities: 0,
+    totalDms: 0,
+    totalCalls: 0,
+    totalReplies: 0,
+    callBookingRate: 0,
+    responseRate: 0
   });
-  const [showAdminForm, setShowAdminForm] = useState(false);
-  const [adminForm, setAdminForm] = useState({
+  const [selectedClientFilter, setSelectedClientFilter] = useState('');
+
+  // Form states
+  const [newUser, setNewUser] = useState({
     email: '',
     password: '',
-    confirmPassword: ''
+    first_name: '',
+    last_name: '',
+    role: 'user',
+    client_id: null
   });
-  const [adminMessage, setAdminMessage] = useState('');
-  const [adminLoading, setAdminLoading] = useState(false);
-  const [realTimeEnabled, setRealTimeEnabled] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState(new Date());
 
+  const [editUser, setEditUser] = useState({
+    email: '',
+    first_name: '',
+    last_name: '',
+    role: 'user',
+    is_active: true
+  });
 
-  const fetchActivities = useCallback(async () => {
+  const [newClient, setNewClient] = useState({
+    name: '',
+    description: ''
+  });
+
+  const [showAssignUsers, setShowAssignUsers] = useState(false);
+  const [assignClient, setAssignClient] = useState(null);
+  const [assignUserIds, setAssignUserIds] = useState([]);
+  const [assignLoading, setAssignLoading] = useState(false);
+
+  useEffect(() => {
+    console.log('🔍 AdminDashboard: Starting...');
+    loadData();
+  }, []);
+
+  const loadData = async () => {
     try {
+      console.log('🔍 Loading data...');
       setLoading(true);
-      let query = supabase
-        .from('daily_activities_with_computed')
+      
+      // Load users
+      const { data: usersData, error: usersError } = await supabase
+        .from('users')
         .select('*')
-        .order('submitted_at', { ascending: false });
-
-      // Apply filters
-      if (filters.dateFrom) {
-        query = query.gte('submitted_at', filters.dateFrom);
-      }
-      if (filters.dateTo) {
-        query = query.lte('submitted_at', filters.dateTo);
+        .order('created_at', { ascending: false });
+      
+      if (usersData) {
+        setUsers(usersData);
+        console.log('✅ Users loaded:', usersData.length);
       }
 
-      const { data, error } = await query;
+      // Load clients
+      const { data: clientsData, error: clientsError } = await supabase
+        .from('clients')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (clientsData) {
+        setClients(clientsData);
+        console.log('✅ Clients loaded:', clientsData.length);
+      }
 
-      if (error) throw error;
+      // Load activities with user and client info
+      const { data: activitiesData, error: activitiesError } = await supabase
+        .from('daily_activities')
+        .select('*, users:users(id, first_name, last_name, email), clients:clients(id, name)')
+        .order('submitted_at', { ascending: false })
+        .limit(50);
+      if (activitiesData) {
+        setActivities(activitiesData);
+        console.log('✅ Activities loaded:', activitiesData.length);
+      }
 
-      setActivities(data || []);
-      setLastUpdate(new Date());
-      console.log('Fetched activities:', data);
+      // Calculate analytics
+      if (activitiesData) {
+        const totalDms = activitiesData.reduce((sum, activity) => 
+          sum + (activity.dms_sent || 0), 0);
+        const totalCalls = activitiesData.reduce((sum, activity) => 
+          sum + (activity.calls_booked || 0), 0);
+        const totalReplies = activitiesData.reduce((sum, activity) => 
+          sum + (activity.replies_received || 0), 0);
+        const totalConnections = activitiesData.reduce((sum, activity) => 
+          sum + (activity.connection_requests_sent || 0), 0);
+        const totalComments = activitiesData.reduce((sum, activity) => 
+          sum + (activity.comments_made || 0), 0);
+        const totalFollowups = activitiesData.reduce((sum, activity) => 
+          sum + (activity.followups_made || 0), 0);
+
+        // Calculate total activities as sum of all activity types
+        const totalActivities = totalDms + totalConnections + totalComments + totalFollowups + totalCalls + totalReplies;
+
+        setAnalytics({
+          totalActivities,
+          totalDms,
+          totalCalls,
+          totalReplies,
+          totalConnections,
+          totalComments,
+          totalFollowups,
+          callBookingRate: totalActivities > 0 ? Math.round((totalCalls / totalActivities) * 100) : 0,
+          responseRate: totalDms > 0 ? Math.round((totalReplies / totalDms) * 100) : 0
+        });
+      }
+
+      console.log('✅ Data loading completed');
     } catch (error) {
-      console.error('Error fetching activities:', error);
-      setError('Failed to fetch activities: ' + error.message);
+      console.error('❌ Error loading data:', error);
     } finally {
       setLoading(false);
     }
-  }, [filters]);
-
-  // Real-time subscription
-  useEffect(() => {
-    if (!realTimeEnabled) return;
-
-    const subscription = supabase
-      .channel('daily_activities_changes')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'daily_activities' 
-        }, 
-        (payload) => {
-          console.log('Real-time update:', payload);
-          fetchActivities(); // Refresh data on any change
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [realTimeEnabled, fetchActivities]);
-
-  // Initial data fetch
-  useEffect(() => {
-    fetchActivities();
-  }, [fetchActivities]);
-
-  // Auto-refresh every 30 seconds
-  useEffect(() => {
-    if (!realTimeEnabled) return;
-
-    const interval = setInterval(() => {
-      fetchActivities();
-    }, 30000); // 30 seconds
-
-    return () => clearInterval(interval);
-  }, [realTimeEnabled, fetchActivities]);
-
-  // Calculate totals
-  const totals = activities.reduce((acc, activity) => {
-    acc.dms_sent += activity.dms_sent || 0;
-    acc.comments_made += activity.comments_made || 0;
-    acc.replies_received += activity.replies_received || 0;
-            acc.followups_made += activity.followups_made || 0;
-    acc.calls_booked += activity.calls_booked || 0;
-    return acc;
-  }, {
-    dms_sent: 0,
-    comments_made: 0,
-    replies_received: 0,
-    followups_scheduled: 0,
-    calls_booked: 0
-  });
-
-  // Prepare data for charts
-  const weeklyData = activities.reduce((acc, activity) => {
-    const week = getWeek(new Date(activity.submitted_at));
-    if (!acc[week]) {
-      acc[week] = {
-        week: `Week ${week}`,
-        dms_sent: 0,
-        comments_made: 0,
-        replies_received: 0,
-        followups_scheduled: 0,
-        calls_booked: 0
-      };
-    }
-    acc[week].dms_sent += activity.dms_sent || 0;
-    acc[week].comments_made += activity.comments_made || 0;
-    acc[week].replies_received += activity.replies_received || 0;
-    acc[week].followups_scheduled += activity.followups_scheduled || 0;
-    acc[week].calls_booked += activity.calls_booked || 0;
-    return acc;
-  }, {});
-
-  const weeklyChartData = Object.values(weeklyData).slice(-8); // Last 8 weeks
-
-  const dailyData = activities.reduce((acc, activity) => {
-    const day = getDay(new Date(activity.submitted_at));
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const dayName = dayNames[day];
-    
-    if (!acc[dayName]) {
-      acc[dayName] = {
-        day: dayName,
-        total: 0
-      };
-    }
-    acc[dayName].total += (activity.dms_sent || 0) + (activity.comments_made || 0) + 
-                          (activity.replies_received || 0) + (activity.followups_scheduled || 0);
-    return acc;
-  }, {});
-
-  const dailyChartData = Object.values(dailyData);
-
-  // Real-time trend data (last 7 days)
-  const trendData = activities
-    .filter(activity => {
-      const activityDate = new Date(activity.submitted_at);
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      return activityDate >= sevenDaysAgo;
-    })
-    .map(activity => ({
-      date: format(new Date(activity.submitted_at), 'MMM dd'),
-      total: (activity.dms_sent || 0) + (activity.comments_made || 0) + 
-             (activity.replies_received || 0) + (activity.followups_scheduled || 0),
-      dms_sent: activity.dms_sent || 0,
-      comments_made: activity.comments_made || 0,
-      replies_received: activity.replies_received || 0,
-      followups_scheduled: activity.followups_scheduled || 0,
-      calls_booked: activity.calls_booked || 0
-    }))
-    .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-  const pieData = [
-    { name: 'DMs Sent', value: totals.dms_sent, color: '#0ea5e9' },
-    { name: 'Comments Made', value: totals.comments_made, color: '#3b82f6' },
-    { name: 'Replies Received', value: totals.replies_received, color: '#8b5cf6' },
-    { name: 'Follow-ups Scheduled', value: totals.followups_scheduled, color: '#06b6d4' },
-    { name: 'Calls Booked', value: totals.calls_booked, color: '#10b981' }
-  ];
-
-  const exportCSV = () => {
-    const headers = ['Date', 'DMs Sent', 'Comments Made', 'Replies Received', 'Follow-ups Scheduled', 'Calls Booked'];
-    const csvContent = [
-      headers.join(','),
-      ...activities.map(activity => [
-        format(new Date(activity.submitted_at), 'yyyy-MM-dd'),
-        activity.dms_sent,
-        activity.comments_made,
-        activity.replies_received,
-        activity.followups_scheduled,
-        activity.calls_booked || 0
-      ].join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `daily-activities-${format(new Date(), 'yyyy-MM-dd')}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
   };
 
-  const exportExcel = () => {
-    // Prepare data for Excel
-    const excelData = activities.map(activity => ({
-      'Date': format(new Date(activity.submitted_at), 'yyyy-MM-dd'),
-      'Day of Week': format(new Date(activity.submitted_at), 'EEEE'),
-      'DMs Sent': activity.dms_sent,
-      'Comments Made': activity.comments_made,
-      'Replies Received': activity.replies_received,
-      'Follow-ups Scheduled': activity.followups_scheduled,
-      'Calls Booked': activity.calls_booked || 0,
-      'Total Activities': (activity.dms_sent || 0) + (activity.comments_made || 0) + 
-                         (activity.replies_received || 0) + (activity.followups_scheduled || 0)
-    }));
-
-    // Add summary sheet
-    const summaryData = [
-      {
-        'Metric': 'Total DMs Sent',
-        'Value': totals.dms_sent
-      },
-      {
-        'Metric': 'Total Comments Made',
-        'Value': totals.comments_made
-      },
-      {
-        'Metric': 'Total Replies Received',
-        'Value': totals.replies_received
-      },
-      {
-        'Metric': 'Total Follow-ups Scheduled',
-        'Value': totals.followups_scheduled
-      },
-      {
-        'Metric': 'Total Calls Booked',
-        'Value': totals.calls_booked
-      },
-      {
-        'Metric': 'Total Submissions',
-        'Value': activities.length
-      }
-    ];
-
-    // Create workbook with multiple sheets
-    const wb = XLSX.utils.book_new();
-    
-    // Main data sheet
-    const ws1 = XLSX.utils.json_to_sheet(excelData);
-    XLSX.utils.book_append_sheet(wb, ws1, 'Daily Activities');
-    
-    // Summary sheet
-    const ws2 = XLSX.utils.json_to_sheet(summaryData);
-    XLSX.utils.book_append_sheet(wb, ws2, 'Summary');
-    
-    // Weekly trends sheet
-    const ws3 = XLSX.utils.json_to_sheet(weeklyChartData);
-    XLSX.utils.book_append_sheet(wb, ws3, 'Weekly Trends');
-    
-    // Daily distribution sheet
-    const ws4 = XLSX.utils.json_to_sheet(dailyChartData);
-    XLSX.utils.book_append_sheet(wb, ws4, 'Daily Distribution');
-
-    // Save the file
-    XLSX.writeFile(wb, `daily-activities-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
-  };
-
-  const generateLookerStudioUrl = () => {
-    // Create a Google Sheets URL that Looker Studio can connect to
-    // For now, we'll create a CSV download that can be imported
-    const csvData = activities.map(activity => ({
-      date: format(new Date(activity.submitted_at), 'yyyy-MM-dd'),
-      day_of_week: format(new Date(activity.submitted_at), 'EEEE'),
-      dms_sent: activity.dms_sent,
-      comments_made: activity.comments_made,
-      replies_received: activity.replies_received,
-      followups_scheduled: activity.followups_scheduled,
-      calls_booked: activity.calls_booked || 0,
-      total_activities: (activity.dms_sent || 0) + (activity.comments_made || 0) + 
-                       (activity.replies_received || 0) + (activity.followups_scheduled || 0)
-    }));
-
-    const csvContent = [
-      'date,day_of_week,dms_sent,comments_made,replies_received,followups_scheduled,calls_booked,total_activities',
-      ...csvData.map(row => 
-        `${row.date},${row.day_of_week},${row.dms_sent},${row.comments_made},${row.replies_received},${row.followups_scheduled},${row.calls_booked},${row.total_activities}`
-      )
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    
-    // Create download link for Looker Studio import
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `looker-studio-data-${format(new Date(), 'yyyy-MM-dd')}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-
-    return 'https://lookerstudio.google.com/';
-  };
-
-  const handleAddAdmin = async (e) => {
+  const handleCreateUser = async (e) => {
     e.preventDefault();
-    setAdminLoading(true);
-    setAdminMessage('');
-
-    // Validate passwords match
-    if (adminForm.password !== adminForm.confirmPassword) {
-      setAdminMessage('Passwords do not match');
-      setAdminLoading(false);
-      return;
-    }
-
-    // Validate password length
-    if (adminForm.password.length < 6) {
-      setAdminMessage('Password must be at least 6 characters long');
-      setAdminLoading(false);
-      return;
-    }
-
-    // Check if admin client is available
-    if (!supabaseAdmin) {
-      setAdminMessage('Admin functionality not available. Please set REACT_APP_SUPABASE_SERVICE_ROLE_KEY in your environment variables.');
-      setAdminLoading(false);
-      return;
-    }
-
     try {
-      // Create new user in Supabase
-      const { error } = await supabaseAdmin.auth.admin.createUser({
-        email: adminForm.email,
-        password: adminForm.password,
-        email_confirm: true // Auto-confirm email
-      });
+      const { data, error } = await supabase
+        .from('users')
+        .insert([{
+          email: newUser.email,
+          password_hash: newUser.password,
+          first_name: newUser.first_name,
+          last_name: newUser.last_name,
+          role: newUser.role,
+          is_active: true
+        }])
+        .select();
 
       if (error) throw error;
-
-      setAdminMessage('Admin user created successfully!');
-      setAdminForm({ email: '', password: '', confirmPassword: '' });
-      setShowAdminForm(false);
       
-      // Clear success message after 3 seconds
-      setTimeout(() => setAdminMessage(''), 3000);
+      setNewUser({
+        email: '',
+        password: '',
+        first_name: '',
+        last_name: '',
+        role: 'user',
+        client_id: null
+      });
+      setShowCreateUser(false);
+      loadData();
     } catch (error) {
-      console.error('Error creating admin:', error);
-      setAdminMessage('Failed to create admin: ' + error.message);
-    } finally {
-      setAdminLoading(false);
+      alert('Error creating user: ' + error.message);
     }
   };
+
+  const handleCreateClient = async (e) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .insert([newClient])
+        .select();
+
+      if (error) throw error;
+      
+      setNewClient({ name: '', description: '' });
+      setShowCreateClient(false);
+      loadData();
+    } catch (error) {
+      console.error('Error creating client:', error);
+      alert('Error creating client');
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    try {
+      const { error } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', userId);
+
+      if (error) throw error;
+      
+      console.log('✅ User deleted successfully');
+      loadData(); // Refresh data
+    } catch (error) {
+      console.error('❌ Error deleting user:', error);
+      alert('Failed to delete user: ' + error.message);
+    }
+  };
+
+  const handleEditUser = (user) => {
+    setSelectedUser(user);
+    setEditUser({
+      email: user.email,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      role: user.role,
+      is_active: user.is_active
+    });
+    setShowEditUser(true);
+  };
+
+  const handleUpdateUser = async (e) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({
+          email: editUser.email,
+          first_name: editUser.first_name,
+          last_name: editUser.last_name,
+          role: editUser.role,
+          is_active: editUser.is_active
+        })
+        .eq('id', selectedUser.id);
+
+      if (error) throw error;
+      
+      console.log('✅ User updated successfully');
+      setShowEditUser(false);
+      setSelectedUser(null);
+      loadData(); // Refresh data
+    } catch (error) {
+      console.error('❌ Error updating user:', error);
+      alert('Failed to update user: ' + error.message);
+    }
+  };
+
+  const handleDeleteUserConfirm = async () => {
+    try {
+      const { error } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', selectedUser.id);
+
+      if (error) throw error;
+      
+      console.log('✅ User deleted successfully');
+      setShowDeleteUser(false);
+      setSelectedUser(null);
+      loadData(); // Refresh data
+    } catch (error) {
+      console.error('❌ Error deleting user:', error);
+      alert('Failed to delete user: ' + error.message);
+    }
+  };
+
+  const handleDeleteClient = async (clientId) => {
+    if (!window.confirm('Are you sure you want to delete this client?')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .eq('id', clientId);
+
+      if (error) throw error;
+      loadData();
+    } catch (error) {
+      console.error('Error deleting client:', error);
+      alert('Error deleting client');
+    }
+  };
+
+  // Open assign modal for a client
+  const handleOpenAssignUsers = async (client) => {
+    setAssignClient(client);
+    setShowAssignUsers(true);
+    // Load current assignments for this client
+    const { data: assignments } = await supabase
+      .from('user_client_assignments')
+      .select('user_id')
+      .eq('client_id', client.id);
+    setAssignUserIds(assignments ? assignments.map(a => a.user_id) : []);
+  };
+
+  // Toggle user selection
+  const handleToggleAssignUser = (userId) => {
+    setAssignUserIds(prev =>
+      prev.includes(userId)
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
+  // Save assignments
+  const handleSaveAssignments = async () => {
+    setAssignLoading(true);
+    try {
+      // Get current assignments from DB
+      const { data: currentAssignments } = await supabase
+        .from('user_client_assignments')
+        .select('user_id')
+        .eq('client_id', assignClient.id);
+      const currentUserIds = currentAssignments ? currentAssignments.map(a => a.user_id) : [];
+      // Find users to add and remove
+      const toAdd = assignUserIds.filter(id => !currentUserIds.includes(id));
+      const toRemove = currentUserIds.filter(id => !assignUserIds.includes(id));
+      // Insert new assignments
+      if (toAdd.length > 0) {
+        await supabase.from('user_client_assignments').insert(
+          toAdd.map(user_id => ({ user_id, client_id: assignClient.id }))
+        );
+      }
+      // Remove unassigned
+      if (toRemove.length > 0) {
+        for (const user_id of toRemove) {
+          await supabase.from('user_client_assignments')
+            .delete()
+            .eq('user_id', user_id)
+            .eq('client_id', assignClient.id);
+        }
+      }
+      setShowAssignUsers(false);
+      setAssignClient(null);
+      setAssignUserIds([]);
+      loadData();
+    } catch (error) {
+      alert('Error saving assignments: ' + error.message);
+    } finally {
+      setAssignLoading(false);
+    }
+  };
+
+  if (!isAdmin()) {
+    return (
+      <div className="container">
+        <div className="error-message">
+          <h2>Access Denied</h2>
+          <p>This dashboard is only available to administrators.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
       <div className="loading">
         <div className="loading-spinner"></div>
-        Loading dashboard...
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="card error">
-        <h3>Error Loading Dashboard</h3>
-        <p>{error}</p>
-        <button onClick={fetchActivities} className="btn">
-          <RefreshCw size={16} />
-          Retry
-        </button>
+        Loading admin dashboard...
       </div>
     );
   }
 
   return (
+    <div className="admin-dashboard">
+      <div className="dashboard-header">
+        <h1>Admin Dashboard</h1>
+        <p>Welcome back, Administrator!</p>
+        <p className="data-notice">📊 Showing all users' analytics and activities</p>
+        
+        <div className="dashboard-stats">
+          <div className="stat-card">
+            <Activity size={24} />
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-        <h2>
-          <BarChart3 className="inline mr-3" />
-          Real-Time Activity Dashboard
-        </h2>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <button 
-            onClick={() => setRealTimeEnabled(!realTimeEnabled)} 
-            className={`btn ${realTimeEnabled ? 'btn-secondary' : ''}`}
-          >
-            <Zap size={18} />
-            {realTimeEnabled ? 'Live' : 'Manual'}
-          </button>
-          <button 
-            onClick={fetchActivities} 
-            className="btn btn-secondary"
-          >
-            <RefreshCw size={18} />
-            Refresh
-          </button>
-          <button 
-            onClick={() => setShowAdminForm(!showAdminForm)} 
-            className="btn btn-secondary"
-          >
-            <UserPlus size={18} />
-            {showAdminForm ? 'Cancel' : 'Add Admin'}
-          </button>
-          <button 
-            onClick={exportCSV} 
-            className="btn btn-secondary"
-          >
-            <Download size={18} />
-            Export CSV
-          </button>
-          <button 
-            onClick={exportExcel} 
-            className="btn"
-          >
-            <FileSpreadsheet size={18} />
-            Export Excel
-          </button>
+              <h3>{analytics.totalActivities || 0}</h3>
+              <p>Total Activities</p>
+            </div>
+          </div>
+          <div className="stat-card">
+            <BarChart3 size={24} />
+            <div>
+              <h3>{analytics.totalDms || 0}</h3>
+              <p>Total DMs</p>
+            </div>
+          </div>
+          <div className="stat-card">
+            <Target size={24} />
+            <div>
+              <h3>{analytics.totalCalls || 0}</h3>
+              <p>Total Calls</p>
+            </div>
+          </div>
+          <div className="stat-card">
+            <Users size={24} />
+    <div>
+              <h3>{users.length || 0}</h3>
+              <p>Total Users</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Real-time Status */}
-      <RealTimeStatus realTimeEnabled={realTimeEnabled} lastUpdate={lastUpdate} />
+      <div className="dashboard-tabs">
+          <button 
+          className={`tab ${activeTab === 'overview' ? 'active' : ''}`}
+          onClick={() => setActiveTab('overview')}
+          >
+          <BarChart3 size={18} />
+          Overview
+          </button>
+          <button 
+          className={`tab ${activeTab === 'users' ? 'active' : ''}`}
+          onClick={() => setActiveTab('users')}
+          >
+          <Users size={18} />
+          Users
+          </button>
+          <button 
+          className={`tab ${activeTab === 'clients' ? 'active' : ''}`}
+          onClick={() => setActiveTab('clients')}
+          >
+          <Building size={18} />
+          Clients
+          </button>
+          <button 
+          className={`tab ${activeTab === 'activities' ? 'active' : ''}`}
+          onClick={() => setActiveTab('activities')}
+        >
+          <Activity size={18} />
+          Activities
+        </button>
+      </div>
 
-      {/* Looker Studio Integration */}
-      <LookerStudioIntegration onExport={generateLookerStudioUrl} />
+      <div className="dashboard-content">
+        {activeTab === 'overview' && (
+          <div className="overview-section">
+            <div className="analytics-grid">
+              <div className="analytics-card">
+                <h3>System Analytics</h3>
+                <div className="analytics-stats">
+                  <div className="stat">
+                    <span>Total DMs:</span>
+                    <span>{analytics.totalDms || 0}</span>
+                  </div>
+                  <div className="stat">
+                    <span>Total Calls:</span>
+                    <span>{analytics.totalCalls || 0}</span>
+                  </div>
+                  <div className="stat">
+                    <span>Total Replies:</span>
+                    <span>{analytics.totalReplies || 0}</span>
+                  </div>
+                  <div className="stat">
+                    <span>Call Booking Rate:</span>
+                    <span>{analytics.callBookingRate || 0}%</span>
+                  </div>
+                  <div className="stat">
+                    <span>Response Rate:</span>
+                    <span>{analytics.responseRate || 0}%</span>
+                  </div>
+                </div>
+              </div>
 
-      {/* Admin Management Section */}
-      {showAdminForm && (
-        <div className="card" style={{ marginBottom: '20px' }}>
-          <h3>
-            <Shield className="inline mr-3" />
-            Add New Admin User
-          </h3>
-          
-          {adminMessage && (
-            <div 
-              className={adminMessage.includes('successfully') ? 'success' : 'error'}
-              style={{ marginBottom: '16px' }}
-            >
-              {adminMessage.includes('successfully') ? (
-                <CheckCircle size={16} className="inline mr-2" />
-              ) : (
-                <AlertCircle size={16} className="inline mr-2" />
-              )}
-              {adminMessage}
+              <div className="analytics-card">
+                <h3>Recent Activities</h3>
+                <div className="recent-activities">
+                  {activities.slice(0, 5).map((activity) => (
+                    <div key={activity.id} className="activity-item">
+                      <div className="activity-client">
+                        User Activity
+                      </div>
+                      <div className="activity-stats">
+                        <span>DMs: {activity.dms_sent}</span>
+                        <span>Calls: {activity.calls_booked || 0}</span>
+                      </div>
+                      <div className="activity-date">
+                        {new Date(activity.submitted_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          )}
+          </div>
+        )}
 
-          <form onSubmit={handleAddAdmin}>
+        {activeTab === 'users' && (
+          <div className="users-section">
+            <div className="section-header">
+              <h2>Manage Users</h2>
+              <button 
+                className="btn btn-primary" 
+                onClick={() => setShowCreateUser(true)}
+          >
+            <UserPlus size={18} />
+                Create User
+          </button>
+            </div>
+
+            <div className="users-grid">
+              {users.map(user => (
+                <div key={user.id} className="user-card">
+                  <div className="user-info">
+                    <h4>{user.first_name} {user.last_name}</h4>
+                    <p>{user.email}</p>
+                    <span className={`role-badge ${user.role}`}>
+                      {user.role}
+                    </span>
+                    <span className={`status-badge ${user.is_active ? 'active' : 'inactive'}`}>
+                      {user.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                  <div className="user-actions">
+          <button 
+                      className="btn btn-small btn-primary"
+                      onClick={() => handleEditUser(user)}
+                      title="Edit User"
+          >
+                      <Edit size={16} />
+          </button>
+          <button 
+                      className="btn btn-small btn-danger"
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setShowDeleteUser(true);
+                      }}
+                      title="Delete User"
+                    >
+                      <Trash2 size={16} />
+          </button>
+        </div>
+      </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'clients' && (
+          <div className="clients-section">
+            <div className="section-header">
+              <h2>Manage Clients</h2>
+              <button 
+                className="btn btn-primary" 
+                onClick={() => setShowCreateClient(true)}
+              >
+                <Building2 size={18} />
+                Create Client
+              </button>
+            </div>
+
+            <div className="clients-grid">
+              {clients.map(client => (
+                <div className="client-card" key={client.id}>
+                  <div className="client-info">
+                    <h4>{client.name}</h4>
+                    <p>{client.description}</p>
+                  </div>
+                  <div className="client-actions">
+                    <button className="btn btn-primary" onClick={() => handleOpenAssignUsers(client)}>
+                      <Users size={16} /> Assign Users
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'activities' && (
+          <div>
+            <div style={{ marginBottom: 16 }}>
+              <label htmlFor="client-filter" style={{ marginRight: 8 }}>Filter by Client:</label>
+              <select id="client-filter" value={selectedClientFilter} onChange={e => setSelectedClientFilter(e.target.value)}>
+                <option value="">All Clients</option>
+                {clients.map(client => (
+                  <option key={client.id} value={client.id}>{client.name}</option>
+                ))}
+              </select>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>DMs</th>
+                  <th>Connections</th>
+                  <th>Comments</th>
+                  <th>Followups</th>
+                  <th>Calls</th>
+                  <th>Replies</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activities.filter(a => !selectedClientFilter || a.client_id === selectedClientFilter).map((activity) => (
+                  <tr key={activity.id}>
+                    <td>{activity.users ? `${activity.users.first_name} ${activity.users.last_name}` : activity.user_id}</td>
+                    <td>{activity.dms_sent}</td>
+                    <td>{activity.connection_requests_sent}</td>
+                    <td>{activity.comments_made}</td>
+                    <td>{activity.followups_made}</td>
+                    <td>{activity.calls_booked || 0}</td>
+                    <td>{activity.replies_received}</td>
+                    <td>{new Date(activity.submitted_at).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Create User Modal */}
+      {showCreateUser && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Create New User</h3>
+            <form onSubmit={handleCreateUser}>
             <div className="form-group">
-              <label htmlFor="admin-email">
-                <Mail size={16} className="inline mr-2" />
-                Admin Email
-              </label>
+                <label>First Name</label>
+              <input
+                  type="text"
+                  value={newUser.first_name}
+                  onChange={(e) => setNewUser({...newUser, first_name: e.target.value})}
+                required
+              />
+            </div>
+            <div className="form-group">
+                <label>Last Name</label>
+              <input
+                  type="text"
+                  value={newUser.last_name}
+                  onChange={(e) => setNewUser({...newUser, last_name: e.target.value})}
+                required
+              />
+            </div>
+            <div className="form-group">
+                <label>Email</label>
               <input
                 type="email"
-                id="admin-email"
-                className="form-control"
-                value={adminForm.email}
-                onChange={(e) => setAdminForm(prev => ({ ...prev, email: e.target.value }))}
-                placeholder="Enter admin email"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({...newUser, email: e.target.value})}
                 required
               />
             </div>
-
             <div className="form-group">
-              <label htmlFor="admin-password">
-                <Lock size={16} className="inline mr-2" />
-                Password
-              </label>
+                <label>Password</label>
               <input
                 type="password"
-                id="admin-password"
-                className="form-control"
-                value={adminForm.password}
-                onChange={(e) => setAdminForm(prev => ({ ...prev, password: e.target.value }))}
-                placeholder="Enter password (min 6 characters)"
-                required
-                minLength={6}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="admin-confirm-password">
-                <Lock size={16} className="inline mr-2" />
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                id="admin-confirm-password"
-                className="form-control"
-                value={adminForm.confirmPassword}
-                onChange={(e) => setAdminForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                placeholder="Confirm password"
+                  value={newUser.password}
+                  onChange={(e) => setNewUser({...newUser, password: e.target.value})}
                 required
               />
             </div>
-
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              <button 
-                type="submit" 
-                className="btn" 
-                disabled={adminLoading}
-              >
-                {adminLoading ? (
-                  <>
-                    <div className="loading-spinner" style={{ width: '16px', height: '16px' }}></div>
-                    Creating Admin...
-                  </>
-                ) : (
-                  <>
-                    <UserPlus size={18} />
-                    Create Admin User
-                  </>
-                )}
-              </button>
-              
-              <button 
-                type="button" 
-                className="btn btn-secondary" 
-                onClick={() => {
-                  setShowAdminForm(false);
-                  setAdminForm({ email: '', password: '', confirmPassword: '' });
-                  setAdminMessage('');
-                }}
-              >
+              <div className="form-group">
+                <label>Role</label>
+                <select
+                  value={newUser.role}
+                  onChange={(e) => setNewUser({...newUser, role: e.target.value})}
+                >
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div className="modal-actions">
+                <button type="submit" className="btn btn-primary">Create User</button>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowCreateUser(false)}>
                 Cancel
               </button>
             </div>
           </form>
-
-          <div 
-            style={{ 
-              marginTop: '20px', 
-              padding: '15px', 
-              backgroundColor: 'var(--neutral-50)', 
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--neutral-200)'
-            }}
-          >
-            <h4 style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '8px',
-              marginBottom: '10px',
-              color: 'var(--neutral-700)'
-            }}>
-              <Shield size={16} />
-              Admin User Permissions:
-            </h4>
-            <ul style={{ 
-              marginLeft: '20px', 
-              marginTop: '10px',
-              color: 'var(--neutral-600)',
-              lineHeight: '1.8'
-            }}>
-              <li>Full access to dashboard and analytics</li>
-              <li>Can view all activity data</li>
-              <li>Can export data (CSV/Excel)</li>
-              <li>Can add more admin users</li>
-              <li>Email will be auto-confirmed</li>
-            </ul>
           </div>
-
-          {!supabaseAdmin && (
-            <div 
-              style={{ 
-                marginTop: '20px', 
-                padding: '15px', 
-                backgroundColor: 'var(--warning-50)', 
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--warning-500)'
-              }}
-            >
-              <h4 style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px',
-                marginBottom: '10px',
-                color: 'var(--warning-700)'
-              }}>
-                <AlertCircle size={16} />
-                Setup Required:
-              </h4>
-              <p style={{ 
-                color: 'var(--warning-600)',
-                lineHeight: '1.6'
-              }}>
-                To enable admin user creation, add your Supabase service role key to your environment variables as <code>REACT_APP_SUPABASE_SERVICE_ROLE_KEY</code>
-              </p>
-            </div>
-          )}
         </div>
       )}
 
-      {/* Filters */}
-      <div className="card">
-        <h3>
-          <Filter className="inline mr-3" />
-          Filters
-        </h3>
-        <div className="filters">
-          <div className="filter-group">
-            <label>From Date:</label>
+      {/* Create Client Modal */}
+      {showCreateClient && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Create New Client</h3>
+            <form onSubmit={handleCreateClient}>
+              <div className="form-group">
+                <label>Client Name</label>
             <input
-              type="date"
-              value={filters.dateFrom}
-              onChange={(e) => setFilters(prev => ({ ...prev, dateFrom: e.target.value }))}
-              className="form-control"
+                  type="text"
+                  value={newClient.name}
+                  onChange={(e) => setNewClient({...newClient, name: e.target.value})}
+                  required
             />
           </div>
-          <div className="filter-group">
-            <label>To Date:</label>
-            <input
-              type="date"
-              value={filters.dateTo}
-              onChange={(e) => setFilters(prev => ({ ...prev, dateTo: e.target.value }))}
-              className="form-control"
+              <div className="form-group">
+                <label>Description</label>
+                <textarea
+                  value={newClient.description}
+                  onChange={(e) => setNewClient({...newClient, description: e.target.value})}
+                required
             />
           </div>
-          <div className="filter-group">
-            <label>Clear Filters:</label>
-            <button 
-              onClick={() => setFilters({ dateFrom: '', dateTo: '', week: '' })}
-              className="btn btn-secondary"
-              style={{ marginTop: '8px' }}
-            >
-              <RefreshCw size={16} />
-              Clear
+              <div className="modal-actions">
+                <button type="submit" className="btn btn-primary">Create Client</button>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowCreateClient(false)}>
+                  Cancel
             </button>
           </div>
+            </form>
         </div>
       </div>
+      )}
 
-      {/* Summary Statistics */}
-      <StatsGrid activities={activities} totals={totals} />
-
-      {/* Real-time Trend Chart */}
-      <div className="chart-container">
-        <h3>
-          <TrendingUp className="inline mr-3" />
-          Real-time Activity Trends (Last 7 Days)
-        </h3>
-        <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={trendData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--neutral-200)" />
-            <XAxis 
-              dataKey="date" 
-              stroke="var(--neutral-600)"
-              fontSize={12}
-            />
-            <YAxis 
-              stroke="var(--neutral-600)"
-              fontSize={12}
-            />
-            <Tooltip 
-              contentStyle={{
-                backgroundColor: 'white',
-                border: '1px solid var(--neutral-200)',
-                borderRadius: 'var(--radius-md)',
-                boxShadow: 'var(--shadow-lg)'
-              }}
-            />
-            <Legend />
-            <Line 
-              type="monotone" 
-              dataKey="total" 
-              stroke="#0ea5e9" 
-              strokeWidth={3}
-              dot={{ fill: '#0ea5e9', strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6 }}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="dms_sent" 
-              stroke="#3b82f6" 
-              strokeWidth={2}
-              dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="comments_made" 
-              stroke="#8b5cf6" 
-              strokeWidth={2}
-              dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 3 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+      {/* Edit User Modal */}
+      {showEditUser && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Edit User</h3>
+            <form onSubmit={handleUpdateUser}>
+              <div className="form-group">
+                <label>First Name</label>
+                <input
+                  type="text"
+                  value={editUser.first_name}
+                  onChange={(e) => setEditUser({...editUser, first_name: e.target.value})}
+                  required
+                />
       </div>
-
-      {/* Charts */}
-      <div className="chart-container">
-        <h3>
-          <TrendingUp className="inline mr-3" />
-          Weekly Activity Trends
-        </h3>
-        <ResponsiveContainer width="100%" height={400}>
-          <AreaChart data={weeklyChartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--neutral-200)" />
-            <XAxis 
-              dataKey="week" 
-              stroke="var(--neutral-600)"
-              fontSize={12}
-            />
-            <YAxis 
-              stroke="var(--neutral-600)"
-              fontSize={12}
-            />
-            <Tooltip 
-              contentStyle={{
-                backgroundColor: 'white',
-                border: '1px solid var(--neutral-200)',
-                borderRadius: 'var(--radius-md)',
-                boxShadow: 'var(--shadow-lg)'
-              }}
-            />
-            <Legend />
-            <Area 
-              type="monotone" 
-              dataKey="dms_sent" 
-              stackId="1" 
-              stroke="#0ea5e9" 
-              fill="#0ea5e9" 
-              fillOpacity={0.8}
-            />
-            <Area 
-              type="monotone" 
-              dataKey="comments_made" 
-              stackId="1" 
-              stroke="#3b82f6" 
-              fill="#3b82f6" 
-              fillOpacity={0.8}
-            />
-            <Area 
-              type="monotone" 
-              dataKey="replies_received" 
-              stackId="1" 
-              stroke="#8b5cf6" 
-              fill="#8b5cf6" 
-              fillOpacity={0.8}
-            />
-            <Area 
-              type="monotone" 
-              dataKey="followups_scheduled" 
-              stackId="1" 
-              stroke="#06b6d4" 
-              fill="#06b6d4" 
-              fillOpacity={0.8}
-            />
-            <Area 
-              type="monotone" 
-              dataKey="calls_booked" 
-              stackId="1" 
-              stroke="#10b981" 
-              fill="#10b981" 
-              fillOpacity={0.8}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+              <div className="form-group">
+                <label>Last Name</label>
+                <input
+                  type="text"
+                  value={editUser.last_name}
+                  onChange={(e) => setEditUser({...editUser, last_name: e.target.value})}
+                  required
+                />
       </div>
-
-      <div className="chart-container">
-        <h3>
-          <Calendar className="inline mr-3" />
-          Activity by Day of Week
-        </h3>
-        <ResponsiveContainer width="100%" height={400}>
-          <BarChart data={dailyChartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--neutral-200)" />
-            <XAxis 
-              dataKey="day" 
-              stroke="var(--neutral-600)"
-              fontSize={12}
-            />
-            <YAxis 
-              stroke="var(--neutral-600)"
-              fontSize={12}
-            />
-            <Tooltip 
-              contentStyle={{
-                backgroundColor: 'white',
-                border: '1px solid var(--neutral-200)',
-                borderRadius: 'var(--radius-md)',
-                boxShadow: 'var(--shadow-lg)'
-              }}
-            />
-            <Bar 
-              dataKey="total" 
-              fill="url(#gradient)"
-              radius={[4, 4, 0, 0]}
-            />
-            <defs>
-              <linearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#0ea5e9" />
-                <stop offset="100%" stopColor="#0284c7" />
-              </linearGradient>
-            </defs>
-          </BarChart>
-        </ResponsiveContainer>
+            <div className="form-group">
+                <label>Email</label>
+              <input
+                  type="email"
+                  value={editUser.email}
+                  onChange={(e) => setEditUser({...editUser, email: e.target.value})}
+                required
+              />
       </div>
-
-      <div className="chart-container">
-        <h3>
-          <PieChart className="inline mr-3" />
-          Activity Distribution
-        </h3>
-        <ResponsiveContainer width="100%" height={400}>
-          <PieChart>
-            <Pie
-              data={pieData}
-              cx="50%"
-              cy="50%"
-              outerRadius={120}
-              fill="#8884d8"
-              dataKey="value"
-            >
-              {pieData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip 
-              contentStyle={{
-                backgroundColor: 'white',
-                border: '1px solid var(--neutral-200)',
-                borderRadius: 'var(--radius-md)',
-                boxShadow: 'var(--shadow-lg)'
-              }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Recent Activity Table */}
-      <div className="card">
-        <h3>
-          <Activity className="inline mr-3" />
-          Recent Activity
-        </h3>
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>DMs Sent</th>
-                <th>Comments Made</th>
-                <th>Replies Received</th>
-                <th>Follow-ups Scheduled</th>
-                <th>Calls Booked</th>
-              </tr>
-            </thead>
-            <tbody>
-              {activities.slice(0, 10).map((activity, index) => (
-                <tr key={activity.id}>
-                  <td>{format(new Date(activity.submitted_at), 'MMM dd, yyyy')}</td>
-                  <td>{activity.dms_sent}</td>
-                  <td>{activity.comments_made}</td>
-                  <td>{activity.replies_received}</td>
-                  <td>{activity.followups_scheduled}</td>
-                  <td>{activity.calls_booked || '-'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              <div className="form-group">
+                <label>Role</label>
+                <select
+                  value={editUser.role}
+                  onChange={(e) => setEditUser({...editUser, role: e.target.value})}
+                >
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Status</label>
+                <select
+                  value={editUser.is_active}
+                  onChange={(e) => setEditUser({...editUser, is_active: e.target.value === 'true'})}
+                >
+                  <option value={true}>Active</option>
+                  <option value={false}>Inactive</option>
+                </select>
+              </div>
+              <div className="modal-actions">
+                <button type="submit" className="btn btn-primary">Update User</button>
+                <button type="button" className="btn btn-secondary" onClick={() => {
+                  setShowEditUser(false);
+                  setSelectedUser(null);
+                }}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
+      )}
+
+      {/* Delete User Confirmation Modal */}
+      {showDeleteUser && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Delete User</h3>
+            <div className="delete-confirmation">
+              <p>Are you sure you want to delete this user?</p>
+              <div className="user-details">
+                <strong>Name:</strong> {selectedUser?.first_name} {selectedUser?.last_name}<br />
+                <strong>Email:</strong> {selectedUser?.email}<br />
+                <strong>Role:</strong> {selectedUser?.role}
+              </div>
+              <p className="warning-text">⚠️ This action cannot be undone. All user data will be permanently deleted.</p>
+            </div>
+            <div className="modal-actions">
+              <button 
+                type="button" 
+                className="btn btn-danger"
+                onClick={handleDeleteUserConfirm}
+              >
+                Delete User
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                onClick={() => {
+                  setShowDeleteUser(false);
+                  setSelectedUser(null);
+                }}
+              >
+                Cancel
+              </button>
       </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Users Modal */}
+      {showAssignUsers && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Assign Users to {assignClient?.name}</h3>
+            <p style={{ color: 'var(--neutral-600)', marginBottom: 10 }}>
+              Uncheck a user to remove them from this client.
+            </p>
+            <div style={{ maxHeight: 300, overflowY: 'auto', marginBottom: 20 }}>
+              {users.map(user => (
+                <div key={user.id} style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={assignUserIds.includes(user.id)}
+                    onChange={() => handleToggleAssignUser(user.id)}
+                    id={`assign-user-${user.id}`}
+                  />
+                  <label htmlFor={`assign-user-${user.id}`} style={{ marginLeft: 8 }}>
+                    {user.first_name} {user.last_name} ({user.email})
+                  </label>
+                </div>
+              ))}
+        </div>
+            <div className="modal-actions">
+              <button className="btn btn-primary" onClick={handleSaveAssignments} disabled={assignLoading}>
+                {assignLoading ? 'Saving...' : 'Save Assignments'}
+              </button>
+              <button className="btn btn-secondary" onClick={() => setShowAssignUsers(false)} disabled={assignLoading}>
+                Cancel
+              </button>
+      </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

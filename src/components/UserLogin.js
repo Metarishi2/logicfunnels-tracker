@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Shield, Mail, Lock, AlertCircle, Database, Key, Zap } from 'lucide-react';
+import { User, Mail, Lock, AlertCircle, Users, Zap } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
-function AdminLogin() {
+function UserLogin() {
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -11,25 +11,22 @@ function AdminLogin() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('🔍 Login attempt:', { email, password });
+    console.log('🔍 User login attempt:', { email, password });
     setIsLoading(true);
     setError('');
 
     try {
-      console.log('🔍 Calling signIn function...');
       const result = await signIn(email, password);
-      console.log('🔍 SignIn result:', result);
 
       if (!result.success) {
-        console.log('❌ Login failed:', result.error);
         setError(result.error);
       } else {
-        console.log('✅ Login successful!');
-        // Redirect or show success message
-        window.location.href = '/admin';
+        console.log('✅ User login successful!');
+        // Redirect to user dashboard
+        window.location.href = '/dashboard';
       }
     } catch (error) {
-      console.error('❌ Login error:', error);
+      console.error('❌ User login error:', error);
       setError('Login failed. Please try again.');
     } finally {
       setIsLoading(false);
@@ -37,20 +34,20 @@ function AdminLogin() {
   };
 
   const quickAccess = () => {
-    console.log('🔍 Quick access clicked');
-    setEmail('admin@example.com');
-    setPassword('admin123');
+    console.log('🔍 Quick access clicked for user');
+    setEmail('user@example.com');
+    setPassword('user123');
   };
 
   return (
     <div className="card">
       <div>
         <h2>
-          <Shield className="inline mr-3" />
-          Admin Login
+          <User className="inline mr-3" />
+          User Login
         </h2>
         <p style={{ marginBottom: '20px', color: 'var(--neutral-600)' }}>
-          Enter your admin credentials to access the dashboard.
+          Login to access your personal dashboard and submit activities.
         </p>
       </div>
 
@@ -99,7 +96,6 @@ function AdminLogin() {
             type="submit" 
             className="btn" 
             disabled={isLoading}
-            onClick={() => console.log('🔍 Sign In button clicked')}
           >
             {isLoading ? (
               <>
@@ -108,7 +104,7 @@ function AdminLogin() {
               </>
             ) : (
               <>
-                <Shield size={18} />
+                <User size={18} />
                 Sign In
               </>
             )}
@@ -141,8 +137,8 @@ function AdminLogin() {
           marginBottom: '10px',
           color: 'var(--success-700)'
         }}>
-          <Key size={16} />
-          Quick Access (Default Admin):
+          <Users size={16} />
+          Quick Access (Test User):
         </h4>
         <div style={{ 
           marginLeft: '20px', 
@@ -150,8 +146,8 @@ function AdminLogin() {
           color: 'var(--success-600)',
           lineHeight: '1.8'
         }}>
-          <p><strong>Email:</strong> admin@example.com</p>
-          <p><strong>Password:</strong> admin123</p>
+          <p><strong>Email:</strong> user@example.com</p>
+          <p><strong>Password:</strong> user123</p>
         </div>
       </div>
 
@@ -159,9 +155,9 @@ function AdminLogin() {
         style={{ 
           marginTop: '20px', 
           padding: '15px', 
-          backgroundColor: 'var(--warning-50)', 
+          backgroundColor: 'var(--info-50)', 
           borderRadius: 'var(--radius-md)',
-          border: '1px solid var(--warning-500)'
+          border: '1px solid var(--info-500)'
         }}
       >
         <h4 style={{ 
@@ -169,24 +165,25 @@ function AdminLogin() {
           alignItems: 'center', 
           gap: '8px',
           marginBottom: '10px',
-          color: 'var(--warning-700)'
+          color: 'var(--info-700)'
         }}>
-          <Database size={16} />
-          Setup Required:
+          <User size={16} />
+          What Users Can Do:
         </h4>
-        <ol style={{ 
+        <ul style={{ 
           marginLeft: '20px', 
           marginTop: '10px',
-          color: 'var(--warning-600)',
+          color: 'var(--info-600)',
           lineHeight: '1.8'
         }}>
-          <li>Run the <code>simple_admin_setup.sql</code> in your Supabase SQL Editor</li>
-          <li>Then login with the credentials above</li>
-          <li>Or use the <a href="/setup" style={{ color: 'var(--primary-600)' }}>Admin Setup</a> page</li>
-        </ol>
+          <li>Submit daily activities</li>
+          <li>View personal analytics</li>
+          <li>Access assigned client dashboards</li>
+          <li>Track performance over time</li>
+        </ul>
       </div>
     </div>
   );
 }
 
-export default AdminLogin; 
+export default UserLogin; 

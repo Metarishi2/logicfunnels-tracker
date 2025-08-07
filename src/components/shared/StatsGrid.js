@@ -52,7 +52,7 @@ function StatsGrid({ activities, totals }) {
             <Activity size={20} className="inline mr-2" />
             Total Follow-ups Made
           </h3>
-          <div className="value">{(totals.followups_made || totals.followups_scheduled || 0).toLocaleString()}</div>
+          <div className="value">{(totals.followups_made || 0).toLocaleString()}</div>
           <div className="trend">
             <TrendingUp size={14} />
             +5% from last week
