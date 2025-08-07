@@ -189,6 +189,15 @@ function App() {
                 rel="noopener noreferrer"
                 className="footer-link"
               >
+                Webxela
+              </a>
+              {' '}|{' '}
+              <a 
+                href="https://webxela.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="footer-link"
+              >
                 Uimitra
               </a>
             </p>
