@@ -1,101 +1,51 @@
-# 🚀 Quick Setup Guide
+# 🚀 Quick Setup Guide (Webxela Activity Tracker)
 
 ## Step 1: Database Setup
-
-1. **Run the multi-tenant schema** in your Supabase SQL Editor:
-   ```sql
-   -- Copy and paste the contents of multi_tenant_schema.sql
-   ```
-
-2. **Create the first admin user** in your Supabase SQL Editor:
-   ```sql
-   -- Copy and paste the contents of create_admin_user.sql
-   ```
+1. Run the schema in your Supabase SQL Editor:
+   - Copy and paste the contents of `simple_admin_setup.sql`
+   - Click "Run"
+   - This creates all tables and the default admin user
 
 ## Step 2: Environment Setup
-
-1. **Copy environment file**:
+1. Copy environment file:
    ```bash
    cp env.example .env
    ```
-
-2. **Update your .env file** with your Supabase credentials:
+2. Update your `.env` file with your Supabase credentials:
    ```env
-   REACT_APP_SUPABASE_URL=https://your-project-id.supabase.co
-   REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key_here
-   REACT_APP_SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key_here
-   PORT=3003
+   REACT_APP_SUPABASE_URL=your_supabase_url
+   REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
+   REACT_APP_SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+   PORT=3001
    REACT_APP_ENV=development
    ```
 
 ## Step 3: Start the Application
-
 ```bash
 npm install
 npm start
 ```
 
 ## Step 4: Login
-
-1. **Go to**: http://localhost:3003
-2. **Click**: "Admin Login" in the navigation
-3. **Login with**:
+1. Go to: [http://localhost:3000](http://localhost:3000)
+2. Click: "Admin Login" in the navigation
+3. Login with:
    - Email: `admin@example.com`
    - Password: `admin123`
 
 ## Step 5: Access Admin Dashboard
-
-1. **After login**, you'll see "Admin Dashboard" in the navigation
-2. **Click it** to access the full admin panel
-3. **Create users and clients** as needed
+1. After login, you'll see "Admin Dashboard" in the navigation
+2. Click it to access the full admin panel
+3. Create users and clients as needed
 
 ## 🎯 What You Can Do Now
+- As Admin: View all analytics, create/manage users and clients, assign users to clients
+- As User: Submit activities, view own analytics, see assigned clients
 
-### As Admin:
-- ✅ View all analytics
-- ✅ Create new users
-- ✅ Create client dashboards
-- ✅ Assign users to clients
-- ✅ Manage the entire system
-
-### Create Your First User:
-1. Go to Admin Dashboard → Users
-2. Click "Create User"
-3. Fill in user details
-4. Assign them to a client
-
-### Create Your First Client:
-1. Go to Admin Dashboard → Clients
-2. Click "Create Client"
-3. Enter client name and description
-
-## 🔧 Troubleshooting
-
-### Issue: "Loading user profile..." stuck
-**Solution**: Make sure you've run the `create_admin_user.sql` script in Supabase
-
-### Issue: Can't login
-**Solution**: Check your Supabase credentials in `.env` file
-
-### Issue: Admin dashboard not showing
-**Solution**: Make sure the admin user exists in the `users` table with role = 'admin'
-
-## 📊 Test the System
-
-1. **Submit an activity** at http://localhost:3003/submit
-2. **View analytics** in the admin dashboard
-3. **Create a user** and assign them to a client
-4. **Login as that user** to see their dashboard
-
-## 🎉 You're Ready!
-
-Your multi-tenant form analytics system is now running! You can:
-- Create multiple users
-- Create multiple clients
-- Assign users to clients
-- Track activities per user and client
-- View analytics at all levels
+## 🛠️ Troubleshooting
+- "Loading user profile..." stuck: Make sure you've run the `simple_admin_setup.sql` script in Supabase
+- Can't login: Check your Supabase credentials in `.env` file
+- Admin dashboard not showing: Make sure the admin user exists in the `users` table with role = 'admin'
 
 ---
-
-**Need help?** Check the full documentation in `SETUP_MULTI_TENANT.md` 
+**Branding:** Powered by [Webxela](https://webxela.com) | Designed by [Uimitra](https://uimitra.com) 
