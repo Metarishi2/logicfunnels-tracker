@@ -154,37 +154,6 @@ function AdminLogin() {
           <p><strong>Password:</strong> admin123</p>
         </div>
       </div>
-
-      <div 
-        style={{ 
-          marginTop: '20px', 
-          padding: '15px', 
-          backgroundColor: 'var(--warning-50)', 
-          borderRadius: 'var(--radius-md)',
-          border: '1px solid var(--warning-500)'
-        }}
-      >
-        <h4 style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '8px',
-          marginBottom: '10px',
-          color: 'var(--warning-700)'
-        }}>
-          <Database size={16} />
-          Setup Required:
-        </h4>
-        <ol style={{ 
-          marginLeft: '20px', 
-          marginTop: '10px',
-          color: 'var(--warning-600)',
-          lineHeight: '1.8'
-        }}>
-          <li>Run the <code>simple_admin_setup.sql</code> in your Supabase SQL Editor</li>
-          <li>Then login with the credentials above</li>
-          <li>Or use the <a href="/setup" style={{ color: 'var(--primary-600)' }}>Admin Setup</a> page</li>
-        </ol>
-      </div>
     </div>
   );
 }
