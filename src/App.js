@@ -182,14 +182,14 @@ function App() {
         <div className="container">
           <div className="footer-content">
             <p>
-              © 2025 Copyright 
+              © 2025 Copyright{' '}
               <a 
                 href="https://webxela.com" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="footer-link"
               >
-                  Webxela
+                Webxela
               </a>
               {' '}and Designed by{' '}
               <a 
