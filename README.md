@@ -53,7 +53,7 @@ A comprehensive React-based daily activity tracking system with real-time analyt
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/WEBXELA/c-web-daily-activity-tracker.git
+   git clone https://github.com/gigzs/c-web-daily-activity-tracker.git
    cd c-web-daily-activity-tracker
    ```
 

@@ -184,16 +184,16 @@ function App() {
             <p>
               © 2025 Copyright{'  '}
               <a 
-                href="https://webxela.com" 
+                href="https://gigzs.com" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="footer-link"
               >
-                Webxela
+                gigzs
               </a>
               {' '}and Designed by{' '}
               <a 
-                href="https://webxela.com" 
+                href="https://gigzs.com" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="footer-link"
