@@ -1,4 +1,4 @@
-# Duplicate Section Removal Summary (Webxela Activity Tracker)
+# Duplicate Section Removal Summary (gigzs Activity Tracker)
 
 ## Changes Made
 - All test and duplicate components, routes, and data have been removed from the codebase.
@@ -28,4 +28,4 @@ src/components/
 ```
 
 ---
-**Branding:** Powered by [Webxela](https://webxela.com) | Designed by [Uimitra](https://uimitra.com) 
+**Branding:** Powered by [gigzs](https://gigzs.com) | Designed by [Uimitra](https://uimitra.com) 

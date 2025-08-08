@@ -611,8 +611,8 @@ function AdminDashboard() {
                 ))}
               </tbody>
             </table>
-          </div>
-        )}
+            </div>
+          )}
       </div>
 
       {/* Create User Modal */}

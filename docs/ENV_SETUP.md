@@ -1,4 +1,4 @@
-# Environment Setup (Webxela Activity Tracker)
+# Environment Setup (gigzs Activity Tracker)
 
 ## Quick Setup
 
@@ -30,4 +30,4 @@
 - The service role key is required for admin operations but should be kept secure.
 
 ---
-**Branding:** Powered by [Webxela](https://webxela.com) | Designed by [Uimitra](https://uimitra.com) 
+**Branding:** Powered by [gigzs](https://gigzs.com) | Designed by [Uimitra](https://uimitra.com) 

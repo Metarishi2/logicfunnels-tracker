@@ -1,4 +1,4 @@
-# 🚀 Setup Guide (Webxela Activity Tracker)
+# 🚀 Setup Guide (gigzs Activity Tracker)
 
 ## Step 1: Add Your Supabase Credentials
 1. Go to your Supabase project dashboard
@@ -48,4 +48,4 @@
 - **App won't start**: Ensure `.env` is correct and all dependencies are installed.
 
 ---
-**Branding:** Powered by [Webxela](https://webxela.com) | Designed by [Uimitra](https://uimitra.com) 
+**Branding:** Powered by [gigzs](https://gigzs.com) | Designed by [Uimitra](https://uimitra.com) 

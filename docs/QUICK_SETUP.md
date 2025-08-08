@@ -1,4 +1,4 @@
-# 🚀 Quick Setup Guide (Webxela Activity Tracker)
+# 🚀 Quick Setup Guide (gigzs Activity Tracker)
 
 ## Step 1: Database Setup
 1. Run the schema in your Supabase SQL Editor:
@@ -48,4 +48,4 @@ npm start
 - Admin dashboard not showing: Make sure the admin user exists in the `users` table with role = 'admin'
 
 ---
-**Branding:** Powered by [Webxela](https://webxela.com) | Designed by [Uimitra](https://uimitra.com) 
+**Branding:** Powered by [gigzs](https://gigzs.com) | Designed by [Uimitra](https://uimitra.com) 

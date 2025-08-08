@@ -1,4 +1,4 @@
-# Webxela Daily Activity Tracker & Dashboard
+# gigzs Daily Activity Tracker & Dashboard
 
 A modern, multi-tenant React-based daily activity tracking system with real-time analytics, professional UI, and Supabase backend.
 
@@ -27,7 +27,7 @@ A modern, multi-tenant React-based daily activity tracking system with real-time
 - Consistent, modern design system across all dashboards
 - Responsive, mobile-friendly layouts
 - All icons, buttons, and UI elements match the new theme
-- Footer: "© 2025 Copyright Webxela and Designed by Webxela | Uimitra" (with links)
+- Footer: "© 2025 Copyright gigzs and Designed by gigzs | Uimitra" (with links)
 
 ## 🛠️ Tech Stack
 - **Frontend**: React 18, React Router DOM
@@ -46,7 +46,7 @@ A modern, multi-tenant React-based daily activity tracking system with real-time
 ### Setup Steps
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/WEBXELA/c-web-daily-activity-tracker.git
+   git clone https://github.com/gigzs/c-web-daily-activity-tracker.git
    cd c-web-daily-activity-tracker
    ```
 2. **Install dependencies**
@@ -120,4 +120,4 @@ MIT License - see [LICENSE](LICENSE)
 For support and questions, open an issue on GitHub.
 
 ---
-**Branding:** Powered by [Webxela](https://webxela.com) | Designed by [Uimitra](https://uimitra.com) 
+**Branding:** Powered by [gigzs](https://gigzs.com) | Designed by [Uimitra](https://uimitra.com) 
