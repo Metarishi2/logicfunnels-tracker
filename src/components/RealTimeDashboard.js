@@ -41,8 +41,8 @@ function RealTimeDashboard() {
     try {
       setLoading(true);
       let query = supabase
-        .from('daily_activities_with_computed')
-        .select('*')
+        .from('daily_activities')
+        .select('*, users:users(first_name, last_name), clients:clients(name)')
         .order('submitted_at', { ascending: false });
 
       // Apply filters

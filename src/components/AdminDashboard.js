@@ -8,7 +8,8 @@ import {
   UserPlus,
   Building2,
   Activity,
-  Target
+  Target,
+  TrendingUp
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useAuth } from '../hooks/useAuth';
@@ -435,6 +436,13 @@ function AdminDashboard() {
           <Activity size={18} />
           Activities
         </button>
+          <button 
+          className={`tab ${activeTab === 'analytics' ? 'active' : ''}`}
+          onClick={() => setActiveTab('analytics')}
+        >
+          <TrendingUp size={18} />
+          Analytics
+        </button>
       </div>
 
       <div className="dashboard-content">
@@ -613,6 +621,87 @@ function AdminDashboard() {
             </table>
             </div>
           )}
+
+        {activeTab === 'analytics' && (
+          <div className="analytics-section">
+            <div style={{ textAlign: 'center', marginBottom: 24 }}>
+              <h2>Advanced Analytics Dashboard</h2>
+              <p style={{ color: '#6b7280', marginTop: 8 }}>
+                For detailed analytics with charts, trends, and comparisons, visit the dedicated Analytics page.
+              </p>
+              <a 
+                href="/analytics" 
+                className="btn btn-primary"
+                style={{ marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 8 }}
+              >
+                <TrendingUp size={18} />
+                View Full Analytics
+              </a>
+            </div>
+            
+            <div className="analytics-grid">
+              <div className="analytics-card">
+                <h3>Quick Analytics Summary</h3>
+                <div className="analytics-stats">
+                  <div className="stat">
+                    <span>Total DMs:</span>
+                    <span>{analytics.totalDms || 0}</span>
+                  </div>
+                  <div className="stat">
+                    <span>Total Calls:</span>
+                    <span>{analytics.totalCalls || 0}</span>
+                  </div>
+                  <div className="stat">
+                    <span>Total Replies:</span>
+                    <span>{analytics.totalReplies || 0}</span>
+                  </div>
+                  <div className="stat">
+                    <span>Call Booking Rate:</span>
+                    <span>{analytics.callBookingRate || 0}%</span>
+                  </div>
+                  <div className="stat">
+                    <span>Response Rate:</span>
+                    <span>{analytics.responseRate || 0}%</span>
+                  </div>
+                  <div className="stat">
+                    <span>Follow-up to Booking Rate:</span>
+                    <span>
+                      {analytics.totalFollowups > 0 
+                        ? Math.round((analytics.totalCalls / analytics.totalFollowups) * 100) 
+                        : 0}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="analytics-card">
+                <h3>Recent Performance</h3>
+                <div className="recent-activities">
+                  {activities.slice(0, 5).map((activity) => {
+                    const callRate = activity.dms_sent > 0 ? Math.round((activity.calls_booked || 0) / activity.dms_sent * 100) : 0;
+                    const responseRate = activity.dms_sent > 0 ? Math.round((activity.replies_received || 0) / activity.dms_sent * 100) : 0;
+                    
+                    return (
+                      <div key={activity.id} className="activity-item">
+                        <div className="activity-client">
+                          {activity.users ? `${activity.users.first_name} ${activity.users.last_name}` : 'Unknown User'}
+                        </div>
+                        <div className="activity-stats">
+                          <span>DMs: {activity.dms_sent}</span>
+                          <span>Calls: {activity.calls_booked || 0}</span>
+                          <span>Rate: {callRate}%</span>
+                        </div>
+                        <div className="activity-date">
+                          {new Date(activity.submitted_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Create User Modal */}

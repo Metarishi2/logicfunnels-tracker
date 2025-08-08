@@ -10,7 +10,8 @@ import {
   Zap,
   Users,
   User,
-  Settings
+  Settings,
+  TrendingUp
 } from 'lucide-react';
 import ActivityForm from './components/ActivityForm';
 import AdminDashboard from './components/AdminDashboard';
@@ -21,6 +22,7 @@ import RealTimeDashboard from './components/RealTimeDashboard';
 import AdminLogin from './components/AdminLogin';
 import UserLogin from './components/UserLogin';
 import TestConnection from './components/TestConnection';
+import Analytics from './components/Analytics';
 import SEO from './components/SEO';
 import { useAuth } from './hooks/useAuth';
 
@@ -118,6 +120,15 @@ function App() {
                 )}
                 {isAdmin() && (
                   <Link 
+                    to="/analytics" 
+                    className={location.pathname === '/analytics' ? 'active' : ''}
+                  >
+                    <TrendingUp size={18} />
+                    Analytics
+                  </Link>
+                )}
+                {isAdmin() && (
+                  <Link 
                     to="/realtime" 
                     className={location.pathname === '/realtime' ? 'active' : ''}
                   >
@@ -193,6 +204,10 @@ function App() {
           <Route 
             path="/user-live-analytics" 
             element={<UserLiveAnalytics />} 
+          />
+          <Route 
+            path="/analytics" 
+            element={<Analytics />} 
           />
         </Routes>
       </main>
