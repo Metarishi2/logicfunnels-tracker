@@ -24,6 +24,25 @@ import TestConnection from './components/TestConnection';
 import SEO from './components/SEO';
 import { useAuth } from './hooks/useAuth';
 
+// Environment check
+const checkEnvironment = () => {
+  const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+  const anonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !anonKey) {
+    console.error('❌ Missing required environment variables!');
+    console.error('REACT_APP_SUPABASE_URL:', supabaseUrl ? 'Set' : 'Missing');
+    console.error('REACT_APP_SUPABASE_ANON_KEY:', anonKey ? 'Set' : 'Missing');
+    return false;
+  }
+  
+  console.log('✅ Environment variables loaded successfully');
+  return true;
+};
+
+// Check environment on app start
+checkEnvironment();
+
 function App() {
   const location = useLocation();
   const { user, userProfile, isAdmin, isUser, signOut } = useAuth();
