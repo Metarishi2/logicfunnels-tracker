@@ -1,9 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Environment variables with your provided values as defaults
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://vplmzedfoakizvnwqsmu.supabase.co'
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwbG16ZWRmb2FraXp2bndxc211Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MDcxNjQsImV4cCI6MjA2OTk4MzE2NH0.Cb6k50jNh1-8Vwap6JpOfJ469kUqkRSYYb3IzRVck3A'
-const supabaseServiceKey = process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwbG16ZWRmb2FraXp2bndxc211Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NDQwNzE2NCwiZXhwIjoyMDY5OTgzMTY0fQ.lwRTVf-knAHuSIbDddAyjc7-1BnfggFw_rjBcpMWwEU'
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://ayeqoelpmaflmswivnaw.supabase.co'
+const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5ZXFvZWxwbWFmbG1zd2l2bmF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2NDM3MDAsImV4cCI6MjA3MDIxOTcwMH0.sPWmzH32DjZ45d-bjfrkc1YUmzrVUzrB5ygOhMQp1qw'
+const supabaseServiceKey = process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5ZXFvZWxwbWFmbG1zd2l2bmF3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NDY0MzcwMCwiZXhwIjoyMDcwMjE5NzAwfQ.P0C0TWGxOl5_bci-LTi_Zi2ojW7pdbfYT1rG1_MePgc'
 
 // Log configuration status
 console.log('Supabase Configuration:');
